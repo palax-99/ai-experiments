@@ -37,22 +37,31 @@ while (true) {
   });
 
   try {
-    const risposta = await client.messages.create({
+    process.stdout.write("\nTutor: ");
+
+    const stream = await client.messages.stream({
       model: "claude-sonnet-4-6",
       max_tokens: 1024,
       system: "Sei un tutor esperto di Java. Rispondi in italiano in modo chiaro e conciso. Quando mostri codice, usa esempi pratici e semplici.",
       messages: conversazione,
     });
 
-    const testo = risposta.content[0].text;
+    let testo = "";
+
+    for await (const chunk of stream) {
+      if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
+        process.stdout.write(chunk.delta.text);
+        testo += chunk.delta.text;
+      }
+    }
+
+    const finalMessage = await stream.finalMessage();
+    console.log(`\n[Token usati: ${finalMessage.usage.input_tokens} input, ${finalMessage.usage.output_tokens} output]\n`);
 
     conversazione.push({
       role: "assistant",
       content: testo,
     });
-
-    console.log(`\nTutor: ${testo}\n`);
-    console.log(`[Token usati: ${risposta.usage.input_tokens} input, ${risposta.usage.output_tokens} output]`);
   } catch (errore) {
     console.log(`\n⚠️ Errore: ${errore.message}`);
     console.log("Riprova con un'altra domanda.\n");
