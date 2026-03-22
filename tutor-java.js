@@ -36,19 +36,26 @@ while (true) {
     content: input,
   });
 
-  const risposta = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    system: "Sei un tutor esperto di Java. Rispondi in italiano in modo chiaro e conciso. Quando mostri codice, usa esempi pratici e semplici.",
-    messages: conversazione,
-  });
+  try {
+    const risposta = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1024,
+      system: "Sei un tutor esperto di Java. Rispondi in italiano in modo chiaro e conciso. Quando mostri codice, usa esempi pratici e semplici.",
+      messages: conversazione,
+    });
 
-  const testo = risposta.content[0].text;
+    const testo = risposta.content[0].text;
 
-  conversazione.push({
-    role: "assistant",
-    content: testo,
-  });
+    conversazione.push({
+      role: "assistant",
+      content: testo,
+    });
 
-  console.log(`\nTutor: ${testo}\n`);
+    console.log(`\nTutor: ${testo}\n`);
+    console.log(`[Token usati: ${risposta.usage.input_tokens} input, ${risposta.usage.output_tokens} output]`);
+  } catch (errore) {
+    console.log(`\n⚠️ Errore: ${errore.message}`);
+    console.log("Riprova con un'altra domanda.\n");
+    conversazione.pop();
+  }
 }
